@@ -3,7 +3,7 @@ import os
 import time
 from discord.ext import commands
 from discord.ext.commands import has_permissions
-import pyminifier
+import pyarmor  # Importing pyarmor for obfuscation
 
 # Allowed user IDs (replace with your own list)
 allowed_users = [123456789012345678, 987654321012345678]
@@ -16,19 +16,15 @@ intents.guilds = True
 # Create the bot
 bot = commands.Bot(command_prefix='!', intents=intents)
 
-# Obfuscation function using pyminifier
+# Obfuscation function using pyarmor
 def obfuscate_file(file_path):
     obfuscated_file_path = f"obfuscated_{file_path}"
     
-    with open(file_path, 'r') as f:
-        code = f.read()
+    # Using pyarmor to obfuscate the file
+    os.system(f"pyarmor obfuscate --output . {file_path}")
     
-    # Obfuscate the code by renaming variables and removing comments
-    obfuscated_code = pyminifier.obfuscate(code, replacement_length=5)
-    
-    # Write the obfuscated code to a new file
-    with open(obfuscated_file_path, 'w') as f:
-        f.write(obfuscated_code)
+    # The obfuscated file is saved in a directory named 'dist'
+    obfuscated_file_path = f"dist/{file_path}"
     
     return obfuscated_file_path
 
