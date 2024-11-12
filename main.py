@@ -12,11 +12,10 @@ allowed_users = [980024916235661352, 987654321012345678]
 intents = discord.Intents.default()
 intents.message_content = True
 intents.guilds = True
-intents.reactions = True  # Add this line to make sure the bot can detect reactions
+intents.reactions = True  # Make sure to enable reactions
 
 # Create the bot
 bot = commands.Bot(command_prefix='!', intents=intents)
-
 
 # Obfuscation function using pyarmor
 def obfuscate_file(file_path):
@@ -30,11 +29,9 @@ def obfuscate_file(file_path):
 
     return obfuscated_file_path
 
-
 @bot.event
 async def on_ready():
     print(f'Bot is online as {bot.user}')
-
 
 @bot.command(name='obfuscate')
 async def obfuscate(ctx):
@@ -56,16 +53,23 @@ async def obfuscate(ctx):
         # Wait for a reaction for up to 30 seconds
         reaction, user = await bot.wait_for("reaction_add", timeout=30.0, check=check)
 
-        # Check if the user clicked the ✅ emoji
+        # If the user clicked ✅
         if str(reaction.emoji) == "✅":
-            await ctx.send("Please upload the file to be obfuscated.")
+            await ctx.send("Please upload the DLL file to be obfuscated.")
+            
+            # Wait for the user to upload a message with the DLL file attached
             msg = await bot.wait_for(
                 "message",
                 check=lambda m: m.author == ctx.author and m.attachments,
                 timeout=60.0)
 
-            # Download the file
+            # Check if the uploaded file is a DLL
             attachment = msg.attachments[0]
+            if not attachment.filename.endswith(".dll"):
+                await ctx.send("Please upload a valid DLL file.")
+                return
+
+            # Download the DLL file
             file_path = f'./{attachment.filename}'
             await attachment.save(file_path)
             await ctx.send("Obfuscating the file, please wait...")
@@ -74,7 +78,7 @@ async def obfuscate(ctx):
             obfuscated_file_path = obfuscate_file(file_path)
 
             # Send the obfuscated file back
-            await ctx.send("File obfuscation complete! Here is your file:", file=discord.File(obfuscated_file_path))
+            await ctx.send("File obfuscation complete! Here is your obfuscated DLL:", file=discord.File(obfuscated_file_path))
 
             # Clean up files after sending
             os.remove(file_path)
@@ -82,10 +86,11 @@ async def obfuscate(ctx):
 
         else:
             await ctx.send("Obfuscation cancelled.")
+
     except Exception as e:
         await ctx.send("Obfuscation request timed out or failed.")
-        print(e)
+        print(f"Error: {e}")
 
 
-# Run the bot with your token (remember to replace the token here in your environment securely)
+# Run the bot with your token (make sure to securely replace this in your environment)
 bot.run("YOUR_DISCORD_BOT_TOKEN")
