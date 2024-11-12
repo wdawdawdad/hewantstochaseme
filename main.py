@@ -6,31 +6,35 @@ from discord.ext.commands import has_permissions
 import pyarmor  # Importing pyarmor for obfuscation
 
 # Allowed user IDs (replace with your own list)
-allowed_users = [123456789012345678, 987654321012345678]
+allowed_users = [980024916235661352, 987654321012345678]
 
 # Define bot intents
 intents = discord.Intents.default()
 intents.message_content = True
 intents.guilds = True
+intents.reactions = True  # Add this line to make sure the bot can detect reactions
 
 # Create the bot
 bot = commands.Bot(command_prefix='!', intents=intents)
 
+
 # Obfuscation function using pyarmor
 def obfuscate_file(file_path):
     obfuscated_file_path = f"obfuscated_{file_path}"
-    
+
     # Using pyarmor to obfuscate the file
     os.system(f"pyarmor obfuscate --output . {file_path}")
-    
+
     # The obfuscated file is saved in a directory named 'dist'
     obfuscated_file_path = f"dist/{file_path}"
-    
+
     return obfuscated_file_path
+
 
 @bot.event
 async def on_ready():
     print(f'Bot is online as {bot.user}')
+
 
 @bot.command(name='obfuscate')
 async def obfuscate(ctx):
@@ -44,14 +48,21 @@ async def obfuscate(ctx):
     await msg.add_reaction("✅")
     await msg.add_reaction("❌")
 
+    # This function will check if the reaction is from the user and is one of the specified emojis
     def check(reaction, user):
         return user == ctx.author and str(reaction.emoji) in ["✅", "❌"]
 
     try:
+        # Wait for a reaction for up to 30 seconds
         reaction, user = await bot.wait_for("reaction_add", timeout=30.0, check=check)
+
+        # Check if the user clicked the ✅ emoji
         if str(reaction.emoji) == "✅":
             await ctx.send("Please upload the file to be obfuscated.")
-            msg = await bot.wait_for("message", check=lambda m: m.author == ctx.author and m.attachments, timeout=60.0)
+            msg = await bot.wait_for(
+                "message",
+                check=lambda m: m.author == ctx.author and m.attachments,
+                timeout=60.0)
 
             # Download the file
             attachment = msg.attachments[0]
@@ -75,5 +86,6 @@ async def obfuscate(ctx):
         await ctx.send("Obfuscation request timed out or failed.")
         print(e)
 
-# Run the bot with your token
+
+# Run the bot with your token (remember to replace the token here in your environment securely)
 bot.run("YOUR_DISCORD_BOT_TOKEN")
