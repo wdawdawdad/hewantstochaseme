@@ -37,34 +37,40 @@ class ObfuscationView(discord.ui.View):
 
     @discord.ui.button(label="✅ Proceed with Obfuscation", style=discord.ButtonStyle.green)
     async def proceed_button(self, button: discord.ui.Button, interaction: discord.Interaction):
-        await interaction.response.send_message("Please upload the DLL file to be obfuscated.")
-        # Wait for the file upload
-        msg = await bot.wait_for(
-            "message",
-            check=lambda m: m.author == self.ctx.author and m.attachments,
-            timeout=60.0
-        )
+        await interaction.response.send_message("Please upload the DLL file to be obfuscated.")  # Acknowledge the button press
+        
+        try:
+            # Wait for the file upload from the user
+            msg = await bot.wait_for(
+                "message",
+                check=lambda m: m.author == self.ctx.author and m.attachments,
+                timeout=60.0  # 60 seconds to upload the file
+            )
 
-        # Download the DLL file
-        attachment = msg.attachments[0]
-        if not attachment.filename.endswith(".dll"):
-            await self.ctx.send("Please upload a valid DLL file.")
-            return
+            # Download the DLL file
+            attachment = msg.attachments[0]
+            if not attachment.filename.endswith(".dll"):
+                await self.ctx.send("Please upload a valid DLL file.")
+                return
 
-        # Save the file
-        file_path = f'./{attachment.filename}'
-        await attachment.save(file_path)
-        await self.ctx.send("Obfuscating the file, please wait...")
+            # Save the file
+            file_path = f'./{attachment.filename}'
+            await attachment.save(file_path)
+            await self.ctx.send("Obfuscating the file, please wait...")
 
-        # Obfuscate the file
-        obfuscated_file_path = obfuscate_file(file_path)
+            # Obfuscate the file
+            obfuscated_file_path = obfuscate_file(file_path)
 
-        # Send the obfuscated file back
-        await self.ctx.send("File obfuscation complete! Here is your obfuscated DLL:", file=discord.File(obfuscated_file_path))
+            # Send the obfuscated file back
+            await self.ctx.send("File obfuscation complete! Here is your obfuscated DLL:", file=discord.File(obfuscated_file_path))
 
-        # Clean up files after sending
-        os.remove(file_path)
-        os.remove(obfuscated_file_path)
+            # Clean up files after sending
+            os.remove(file_path)
+            os.remove(obfuscated_file_path)
+
+        except Exception as e:
+            await self.ctx.send(f"Error: {e}")
+            print(e)
 
     @discord.ui.button(label="❌ Cancel", style=discord.ButtonStyle.red)
     async def cancel_button(self, button: discord.ui.Button, interaction: discord.Interaction):
